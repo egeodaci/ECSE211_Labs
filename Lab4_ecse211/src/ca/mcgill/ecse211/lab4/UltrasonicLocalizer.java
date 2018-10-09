@@ -9,9 +9,9 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  */
 public class UltrasonicLocalizer implements UltrasonicController {
 	
-	private static final int THRESHOLD = 43;
-	private static final int ERROR_MARGIN = 7;
-  	private static final int ROTATE_SPEED = 50;
+	private static final int THRESHOLD = 39;
+	private static final int ERROR_MARGIN = 6;
+  	private static final int ROTATE_SPEED = 40;
   	private static final int TURN_ANGLE = 360;
 	private Odometer odo;
   	private EV3LargeRegulatedMotor leftMotor;

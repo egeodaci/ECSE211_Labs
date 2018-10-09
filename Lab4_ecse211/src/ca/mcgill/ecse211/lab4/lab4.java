@@ -27,7 +27,6 @@ public class lab4 {
 	 public static final double TRACK = 11.3;
 	
 	 
-	@SuppressWarnings("unused")
 	public static void main(String[] args) throws OdometerExceptions {
 		 
 		 Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); 
@@ -65,14 +64,13 @@ public class lab4 {
 			 }
 		 }).start();
 		 
-		 while(Button.waitForAnyPress() != Button.ID_LEFT) {
-			 (new Thread() {
-				 public void run() {
-					 lLocalizer.findOrigin();
-				 }
-			 }).start();
-		 }
-		 // TODO stop the ultrasonic poller and start the light poller
+		 while(Button.waitForAnyPress() != Button.ID_LEFT);
+		 (new Thread() {
+			 public void run() {
+				 lLocalizer.findOrigin();
+			 }
+		 }).start();
+		 
 
 		 while (Button.waitForAnyPress() != Button.ID_ESCAPE);
 		 System.exit(0);	 
