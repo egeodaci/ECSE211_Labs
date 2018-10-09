@@ -33,7 +33,7 @@ public class lab4 {
 		 Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); 
 		 Display odometryDisplay = new Display(lcd);
 		 final UltrasonicLocalizer uLocalizer = new UltrasonicLocalizer(leftMotor, rightMotor);
-		 LightLocalizer llocalizer = new LightLocalizer();
+		 final LightLocalizer lLocalizer = new LightLocalizer(leftMotor, rightMotor);
 		 
 		 @SuppressWarnings("resource")
 		 SensorModes usSensor = new EV3UltrasonicSensor(usPort); 
@@ -60,11 +60,18 @@ public class lab4 {
 			 public void run() {
 				 if (buttonChoice == Button.ID_RIGHT)
 					 uLocalizer.fallingEdge();
-//				 else 
-//					 uLocalizer.risingEdge();
+				 else 
+					 uLocalizer.risingEdge();
 			 }
 		 }).start();
 		 
+		 while(Button.waitForAnyPress() != Button.ID_LEFT) {
+			 (new Thread() {
+				 public void run() {
+					 lLocalizer.findOrigin();
+				 }
+			 }).start();
+		 }
 		 // TODO stop the ultrasonic poller and start the light poller
 
 		 while (Button.waitForAnyPress() != Button.ID_ESCAPE);

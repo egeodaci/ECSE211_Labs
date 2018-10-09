@@ -1,0 +1,18 @@
+package ca.mcgill.ecse211.lab4;
+
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
+
+public class LightLocalizer {
+
+	public LightLocalizer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) throws OdometerExceptions{
+		
+	}
+	
+	
+	public void findOrigin() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

@@ -1,0 +1,70 @@
+package ca.mcgill.ecse211.lab4;
+
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import lejos.hardware.Sound;
+import lejos.hardware.ev3.LocalEV3;
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.SensorModes;
+import lejos.robotics.SampleProvider;
+
+public class LightLocalizer {
+
+  	private static final int ROTATE_SPEED = 50;
+  	private static final int FORWARD_SPEED = 60;
+  	private static final int MAX_Y_DISTANCE = 20;
+	private Odometer odo;
+  	private EV3LargeRegulatedMotor leftMotor;
+  	private EV3LargeRegulatedMotor rightMotor;
+	private static final SensorModes colorSensor = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
+	SampleProvider colorSample = colorSensor.getMode("Red");
+	static float[] colorData = new float[colorSensor.sampleSize()];
+	
+	
+	
+	
+	
+	public LightLocalizer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) throws OdometerExceptions{
+		this.odo = Odometer.getOdometer();
+		this.leftMotor = leftMotor;
+		this.rightMotor = rightMotor;
+	}
+	
+	
+	public void findOrigin() {
+		colorSample.fetchSample(colorData, 0);
+		//move forward till line detects and save y value (max of 20 move forward)
+		while(colorData[0] > 0.25) {
+			
+		}
+		//move backwards same amount of y
+		//turn right 90 degrees and move till line found
+		//then move by known distance of sensor-center_robot more to x
+		//turn left 90 degrees
+		//move forward by saved y value + known distance of sensor_robot
+		
+		//if (colorData[0] < .18 && !onTopOfLine) 
+		
+	}
+	
+	public void moveForward(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, double distance) {
+	    leftMotor.setSpeed(FORWARD_SPEED);
+	    rightMotor.setSpeed(FORWARD_SPEED);
+	    leftMotor.rotate(convertDistance(lab4.WHEEL_RAD, MAX_Y_DISTANCE), true);
+	    rightMotor.rotate(convertDistance(lab4.WHEEL_RAD, MAX_Y_DISTANCE), true);
+	}
+	
+	/**
+	 * This method allows the conversion of a distance to the total rotation of each wheel need to
+	 * cover that distance.
+	 * 
+	 * @param radius
+	 * @param distance
+	 * @return
+	 */
+	private static int convertDistance(double radius, double distance) {
+		return (int) ((180.0 * distance) / (Math.PI * radius));
+	}
+
+}
