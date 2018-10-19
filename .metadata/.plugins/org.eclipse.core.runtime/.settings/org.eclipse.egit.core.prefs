@@ -1,5 +1,5 @@
-GitRepositoriesView.GitDirectories=
-GitRepositoriesView.GitDirectories.relative=
+GitRepositoriesView.GitDirectories=/Users/fumaster101/eclipse-workspace/.git\:
+GitRepositoriesView.GitDirectories.relative=.git\:
 RepositorySearchDialogDeepSearch=false
 RepositorySearchDialogSearchPath=/Users/fumaster101/eclipse-workspace/Lab4_ecse211/src
 RepositorySearchDialogSkipHidden=true

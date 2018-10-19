@@ -65,6 +65,7 @@ public class lab4 {
 		 }).start();
 		 
 		 while(Button.waitForAnyPress() != Button.ID_LEFT);
+		 
 		 (new Thread() {
 			 public void run() {
 				 lLocalizer.findOrigin();

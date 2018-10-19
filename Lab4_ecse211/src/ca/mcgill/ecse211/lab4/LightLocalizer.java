@@ -17,7 +17,7 @@ public class LightLocalizer {
   	private static final int RIGHT_ANGLE = 90; 
   	private static final int LIGHTSENSOR_TO_ROBOTCENTER = 4;
   	private static final double BLACK_LINE = 0.18;
-  	private static final int STOP_ERROR = 2;
+  	
 	private Odometer odo;
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
@@ -41,7 +41,6 @@ public class LightLocalizer {
 			colorSample.fetchSample(colorData, 0);
 			if (colorData[0] < BLACK_LINE) {
 				Sound.beep();
-				//stopMotors(leftMotor, rightMotor); //stop motors save y value
 				saveY = odo.getXYTD()[1];
 				break;
 			}
@@ -54,8 +53,7 @@ public class LightLocalizer {
 		while(true) {
 			colorSample.fetchSample(colorData, 0);
 			if (colorData[0] < BLACK_LINE) {
-				Sound.beep();
-				//stopMotors(leftMotor, rightMotor); 
+				Sound.beep(); 
 				break;
 			}
 		}
@@ -64,7 +62,7 @@ public class LightLocalizer {
 		// turn left 90 degrees
 		turnRobot(leftMotor, rightMotor, RIGHT_ANGLE, false, false); 	
 		// move forward by saved y value + sensor-robotCenter
-		moveStraight(leftMotor, rightMotor, (LIGHTSENSOR_TO_ROBOTCENTER + (saveY)), true, false); 
+		moveStraight(leftMotor, rightMotor, (LIGHTSENSOR_TO_ROBOTCENTER + saveY), true, false); 
 	}
 	
 	/**
