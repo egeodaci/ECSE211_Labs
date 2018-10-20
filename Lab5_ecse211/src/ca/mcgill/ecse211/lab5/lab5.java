@@ -4,6 +4,7 @@ import ca.mcgill.ecse211.localizers.*;
 import ca.mcgill.ecse211.odometer.*;
 import ca.mcgill.ecse211.searcher.Navigation;
 import ca.mcgill.ecse211.searcher.Search;
+import ca.mcgill.ecse211.sensors.UltrasonicPoller;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -32,7 +33,7 @@ public class lab5 {
 		
 		Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); 
 		Navigation navigator = new Navigation(leftMotor, rightMotor);
-		Search tracker = new Search(navigator);
+		Search tracker = new Search(navigator, leftMotor, rightMotor);
 		UltrasonicLocalizer uLocalizer = new UltrasonicLocalizer(leftMotor, rightMotor);
 		LightLocalizer lLocalizer = new LightLocalizer(leftMotor, rightMotor);
 		 
@@ -44,11 +45,12 @@ public class lab5 {
 		
 
 		
-		//Start odometer and ultrasonic poller threads
+		//Start odometer and sensor threads
 		Thread odoThread = new Thread(odometer);
 		odoThread.start();
 		Thread usPoller = new UltrasonicPoller(usDistance, usData, uLocalizer);
 		usPoller.start();
+		
 		
 		//Start field trial
 		Button.waitForAnyPress();

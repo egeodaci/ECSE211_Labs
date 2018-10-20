@@ -4,6 +4,7 @@ import ca.mcgill.ecse211.lab5.Display;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.Sound;
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 
 
@@ -24,8 +25,12 @@ public class Search extends Thread {
 	public static final int TR = 2;
 	public static final int SC = 0;
 	
+	private static final int THRESHOLD = 15;
+	
 	private Navigation navigator;
 	private Odometer odo;
+  	private EV3LargeRegulatedMotor leftMotor;
+  	private EV3LargeRegulatedMotor rightMotor;
 	
 	private static int waypoints[][];
 	
@@ -37,29 +42,43 @@ public class Search extends Thread {
 	/**
 	 * Constructor
 	 */
-	public Search(Navigation navigator) throws OdometerExceptions {
+	public Search(Navigation navigator, EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) 
+			throws OdometerExceptions {
 		this.navigator = navigator;
 		this.odo = Odometer.getOdometer();
+		this.leftMotor = leftMotor;
+		this.rightMotor = rightMotor;
 	}
 	
 	
+	@SuppressWarnings("unused")
 	public void run() {
-		//navigate to start of search region
-		navigator.travelToCoordinate(LL_X, LL_Y);
-		while(!navigator.hasArrived(LL_X, LL_Y)) {
-            try {
-                Thread.sleep(300);
-            } catch (InterruptedException e) {}
-		}
-		Sound.beep();
 		
-		waypoints = createWayPoints(LL_X, LL_Y, UR_X, UR_Y);
+		moveToSearchRegion();	// go to start of search region
+		waypoints = createWayPoints(LL_X, LL_Y, UR_X, UR_Y);	// create waypoints to travel to
+		
+		//define variables
+		int[] nextXY = new int[2];
+		int d;
+		boolean isNotConsecutiveRing = true;
 		
 		//move to next point
-		int[] nextXY = new int[2];
 		for (int i = 0; i < waypoints.length; i++) {
 			nextXY = waypoints[i];
 			navigator.travelToCoordinate(nextXY[0], nextXY[1]);
+			while(true) {
+				d = odo.getD();
+				if (d < THRESHOLD) {	//ring detected
+					//stop motors
+					stopMotors(leftMotor, rightMotor);
+					//detect what color it is (maybe have to move close or back)
+					detectRingColor();
+					//avoid
+					if (isNotConsecutiveRing) {
+						
+					}
+				}
+			}
 			
 			
 		}
@@ -82,11 +101,37 @@ public class Search extends Thread {
 	}
 	
 	
+	private void detectRingColor() {
+		//might have to adjust distance to ring
+		
+		
+	}
+
+
+	public void stopMotors(EV3LargeRegulatedMotor left, EV3LargeRegulatedMotor right) {
+		left.stop();
+		left.setAcceleration(1000);
+		right.stop();
+		right.setAcceleration(1000);
+	}
 	
 	
 
 	
-	
+	/**
+	 * This method moves the robot to the start of the search region
+	 */
+	private void moveToSearchRegion() {
+		navigator.travelToCoordinate(LL_X, LL_Y);
+		while(!navigator.hasArrived(LL_X, LL_Y)) {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {}
+		}
+		Sound.beep();
+	}
+
+
 	// this method is for avoiding objects
 	// do standard avoidance by curving around ring touching
 	// on the center of the tile you are crossing and a bit towards the ring

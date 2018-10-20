@@ -10,7 +10,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  */
 public class Navigation {
 	
-	private static final int FORWARD_SPEED = 250;
+	private static final int FORWARD_SPEED = 180;
   	private static final int ROTATE_SPEED = 150;
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
@@ -28,9 +28,9 @@ public class Navigation {
      * @throws OdometerExceptions 
      */
     public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) throws OdometerExceptions {
-      this.odo = Odometer.getOdometer();
-      this.leftMotor = leftMotor;
-      this.rightMotor = rightMotor;
+    	this.odo = Odometer.getOdometer();
+    	this.leftMotor = leftMotor;
+    	this.rightMotor = rightMotor;
     }
     
     /**
