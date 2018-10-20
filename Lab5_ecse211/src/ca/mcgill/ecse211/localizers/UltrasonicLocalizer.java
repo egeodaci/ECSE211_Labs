@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.localizers;
 
 import ca.mcgill.ecse211.odometer.*;
+import ca.mcgill.ecse211.sensors.DataController;
 import ca.mcgill.ecse211.lab5.*;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
@@ -15,6 +16,7 @@ public class UltrasonicLocalizer extends Thread {
   	private static final int ROTATE_SPEED = 40;
   	private static final int TURN_ANGLE = 360;
 	private Odometer odo;
+	private DataController dataCont;
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
 	
@@ -25,6 +27,7 @@ public class UltrasonicLocalizer extends Thread {
 	 */
 	public UltrasonicLocalizer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) throws OdometerExceptions {
 		this.odo = Odometer.getOdometer();
+		this.dataCont = DataController.getDataController();
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
 	}
@@ -53,13 +56,13 @@ public class UltrasonicLocalizer extends Thread {
 
 		turnRobot(leftMotor, rightMotor, TURN_ANGLE, true);
 		while(true) {
-			d = odo.getD();
+			d = dataCont.getD();
 			if (d < THRESHOLD + ERROR_MARGIN) {
-				x1 = odo.getXYTD()[2];
+				x1 = odo.getXYT()[2];
 				while(true) {
-					d = odo.getD();
+					d = dataCont.getD();
 					if (d < THRESHOLD - ERROR_MARGIN) {
-						x2 = odo.getXYTD()[2];
+						x2 = odo.getXYT()[2];
 						break;
 					}
 				}
@@ -76,13 +79,13 @@ public class UltrasonicLocalizer extends Thread {
 	    }
 		
 		while(true) {
-			d = odo.getD();
+			d = dataCont.getD();
 			if (d < THRESHOLD + ERROR_MARGIN) {
-				y1 = odo.getXYTD()[2];
+				y1 = odo.getXYT()[2];
 				while(true) {
-					d = odo.getD();
+					d = dataCont.getD();
 					if (d < THRESHOLD - ERROR_MARGIN) {
-						y2 = odo.getXYTD()[2];
+						y2 = odo.getXYT()[2];
 						break;
 					}
 				}
@@ -128,7 +131,7 @@ public class UltrasonicLocalizer extends Thread {
 	}
 	
 	public void correctAngle(double dTheta) {
-		double newTheta = (odo.getXYTD()[2] + dTheta) % 360;
+		double newTheta = (odo.getXYT()[2] + dTheta) % 360;
 		odo.setTheta(newTheta);
 		int turnAngle = (int) (360.0 - (newTheta));
 		turnRobot(leftMotor, rightMotor, turnAngle, true);

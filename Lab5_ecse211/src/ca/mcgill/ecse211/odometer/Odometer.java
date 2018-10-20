@@ -106,7 +106,7 @@ public class Odometer extends OdometerData implements Runnable {
     // Calculate new robot position based on tachometer counts
 	  double distL, distR, deltaD, deltaT, dX, dY;
 	  int nowTachoL, nowTachoR;
-	  position = odo.getXYTD();
+	  position = odo.getXYT();
 	  
 	  // Calculate the change in distances and Theta with motor tacho counts
 	  nowTachoL = leftMotor.getTachoCount();

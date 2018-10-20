@@ -45,7 +45,7 @@ public class LightLocalizer extends Thread {
 			lightIntensity = dataCont.getL();
 			if (lightIntensity < BLACK_LINE) {
 				Sound.beep();
-				saveY = odo.getXYTD()[1];
+				saveY = odo.getXYT()[1];
 				break;
 			}
 		}

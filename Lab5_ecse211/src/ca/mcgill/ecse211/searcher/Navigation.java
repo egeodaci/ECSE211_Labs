@@ -3,6 +3,7 @@ package ca.mcgill.ecse211.searcher;
 import ca.mcgill.ecse211.lab5.lab5;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import ca.mcgill.ecse211.sensors.DataController;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
@@ -16,6 +17,7 @@ public class Navigation {
   	private EV3LargeRegulatedMotor rightMotor;
   	
   	private Odometer odo;
+  	private DataController dataCont;
   	private static boolean isNavigating;
 
   	
@@ -29,6 +31,7 @@ public class Navigation {
      */
     public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) throws OdometerExceptions {
     	this.odo = Odometer.getOdometer();
+    	this.dataCont = DataController.getDataController();
     	this.leftMotor = leftMotor;
     	this.rightMotor = rightMotor;
     }
@@ -43,7 +46,7 @@ public class Navigation {
 		isNavigating = false;
 		
 		while(!hasArrived(x, y)) {
-		    double distance = odo.getXYTD()[3];
+		    double distance = dataCont.getD();
 			
 			if(distance < 20 && isNotABorderWall()) {
 				isNavigating = false;
@@ -74,8 +77,8 @@ public class Navigation {
      * @param y
      */
 	public void travelToCoordinate(double x, double y) {
-		double dX = x - odo.getXYTD()[0];
-		double dY = y - odo.getXYTD()[1];
+		double dX = x - odo.getXYT()[0];
+		double dY = y - odo.getXYT()[1];
 		double theta = Math.atan(dX/dY); 
 		if (dY < 0 && theta < Math.PI) theta += Math.PI; 
 		double distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2));
@@ -95,7 +98,7 @@ public class Navigation {
      * @param theta
      */
 	public void turnTo(double theta) {
-		double dTheta = theta - odo.getXYTD()[2];
+		double dTheta = theta - odo.getXYT()[2];
 		if(dTheta < 0) dTheta += 360;
 		// turn right
 		if (dTheta > 180) {
@@ -119,8 +122,8 @@ public class Navigation {
      * Checks if robot reached its destination
      */
 	public boolean hasArrived(double xDest, double yDest) {
-		double xCurr = odo.getXYTD()[0];
-		double yCurr = odo.getXYTD()[1];
+		double xCurr = odo.getXYT()[0];
+		double yCurr = odo.getXYT()[1];
 		double cErr = Math.hypot(xCurr - xDest, yCurr - yDest);
 		return cErr < 4;
 	}
@@ -144,7 +147,4 @@ public class Navigation {
 		return isNavigating;
 	}
 
-	public void processUSData(int distance) {
-		odo.setD(distance);
-	}
 }

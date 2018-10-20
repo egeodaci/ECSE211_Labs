@@ -3,6 +3,7 @@ package ca.mcgill.ecse211.searcher;
 import ca.mcgill.ecse211.lab5.Display;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import ca.mcgill.ecse211.sensors.DataController;
 import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
@@ -29,6 +30,7 @@ public class Search extends Thread {
 	
 	private Navigation navigator;
 	private Odometer odo;
+	private DataController dataCont;
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
 	
@@ -46,6 +48,7 @@ public class Search extends Thread {
 			throws OdometerExceptions {
 		this.navigator = navigator;
 		this.odo = Odometer.getOdometer();
+		this.dataCont = DataController.getDataController();
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
 	}
@@ -59,7 +62,7 @@ public class Search extends Thread {
 		
 		//define variables
 		int[] nextXY = new int[2];
-		int d;
+		double d;
 		boolean isNotConsecutiveRing = true;
 		
 		//move to next point
@@ -67,8 +70,8 @@ public class Search extends Thread {
 			nextXY = waypoints[i];
 			navigator.travelToCoordinate(nextXY[0], nextXY[1]);
 			while(true) {
-				d = odo.getD();
-				if (d < THRESHOLD) {	//ring detected
+				d = dataCont.getD();
+				if (d < THRESHOLD) { //ring detected
 					//stop motors
 					stopMotors(leftMotor, rightMotor);
 					//detect what color it is (maybe have to move close or back)
