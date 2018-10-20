@@ -9,7 +9,7 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
-public class LightLocalizer {
+public class LightLocalizer extends Thread {
 
   	private static final int ROTATE_SPEED = 50;
   	private static final int FORWARD_SPEED = 60;
@@ -33,7 +33,7 @@ public class LightLocalizer {
 	}
 	
 	
-	public void findOrigin() {
+	public void run() {
 		double saveY = 0.0;
 		//move forward till detect line 
 		moveStraight(leftMotor, rightMotor, MAX_DISTANCE, true, true);

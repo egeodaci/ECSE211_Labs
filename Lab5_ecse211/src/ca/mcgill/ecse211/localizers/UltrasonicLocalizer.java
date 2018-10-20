@@ -8,7 +8,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * This class is used to localize the angle of the robot using the Ultrasonic sensor
  *
  */
-public class UltrasonicLocalizer implements UltrasonicController {
+public class UltrasonicLocalizer extends Thread implements UltrasonicController {
 	
 	private static final int THRESHOLD = 39;
 	private static final int ERROR_MARGIN = 6;
@@ -33,7 +33,7 @@ public class UltrasonicLocalizer implements UltrasonicController {
 	/**
 	 * This method localizes the robot using the falling edge procedure
 	 */
-	public void fallingEdge() {
+	public void run() {
 		
 	    // reset motors
 	    for (EV3LargeRegulatedMotor motor : new EV3LargeRegulatedMotor[] {leftMotor, rightMotor}) {
@@ -96,69 +96,6 @@ public class UltrasonicLocalizer implements UltrasonicController {
 		dTheta = dThetaFallingEdge(backWall, leftWall);
 		correctAngle(dTheta);
 	}
-	
-	public void risingEdge() {
-	    // reset motors
-	    for (EV3LargeRegulatedMotor motor : new EV3LargeRegulatedMotor[] {leftMotor, rightMotor}) {
-	      motor.stop();
-	      motor.setAcceleration(1000);
-	    }
-
-	    // sleep 2 seconds
-	    try {
-	      Thread.sleep(2000);
-	    } catch (InterruptedException e) {
-	    }
-		
-		double x1 = 1.0, x2 = 1.0, y1 = 1.0, y2 = 1.0, d;
-		double backWall = 360.0, leftWall = 360.0, dTheta;
-		
-
-		turnRobot(leftMotor, rightMotor, TURN_ANGLE, false);
-		while(true) {
-			d = odo.getD();
-			if (d > THRESHOLD - ERROR_MARGIN) {
-				x1 = odo.getXYTD()[2];
-				while(true) {
-					d = odo.getD();
-					if (d > THRESHOLD + ERROR_MARGIN) {
-						x2 = odo.getXYTD()[2];
-						break;
-					}
-				}
-				break;
-			}
-		}
-	
-		turnRobot(leftMotor, rightMotor, TURN_ANGLE, true);
-		
-	    // sleep 2 seconds
-	    try {
-	      Thread.sleep(2000);
-	    } catch (InterruptedException e) {
-	    }
-		
-		while(true) {
-			d = odo.getD();
-			if (d > THRESHOLD - ERROR_MARGIN) {
-				y1 = odo.getXYTD()[2];
-				while(true) {
-					d = odo.getD();
-					if (d > THRESHOLD + ERROR_MARGIN) {
-						y2 = odo.getXYTD()[2];
-						break;
-					}
-				}
-				break;
-			}
-		}
-		
-		stopMotors(leftMotor, rightMotor);	//reset motors
-		backWall = (x1+x2)/2.0;
-		leftWall = (y1+y2)/2.0;
-		dTheta = dThetaRisingEdge(backWall, leftWall);
-		correctAngle(dTheta);
-	}
 
 
 	/**
@@ -188,10 +125,6 @@ public class UltrasonicLocalizer implements UltrasonicController {
 	
 	public double dThetaFallingEdge(double backWall, double leftWall) {
 		return 225.0 - (backWall+leftWall)/2.0;
-	}
-	
-	private double dThetaRisingEdge(double backWall, double leftWall) {
-		return 45.0 - (backWall+leftWall)/2.0;
 	}
 	
 	public void correctAngle(double dTheta) {
