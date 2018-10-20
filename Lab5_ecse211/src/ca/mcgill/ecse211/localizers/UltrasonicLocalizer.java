@@ -8,7 +8,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * This class is used to localize the angle of the robot using the Ultrasonic sensor
  *
  */
-public class UltrasonicLocalizer extends Thread implements UltrasonicController {
+public class UltrasonicLocalizer extends Thread {
 	
 	private static final int THRESHOLD = 39;
 	private static final int ERROR_MARGIN = 6;
@@ -31,7 +31,7 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	
 	
 	/**
-	 * This method localizes the robot using the falling edge procedure
+	 * This thread localizes the robot using the falling edge procedure
 	 */
 	public void run() {
 		
@@ -149,17 +149,5 @@ public class UltrasonicLocalizer extends Thread implements UltrasonicController 
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
-
-	@Override
-	public void processUSData(int distance) {
-		odo.setD(distance);
-	}
-
-	@Override
-	public int readUSDistance() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	
 
 }

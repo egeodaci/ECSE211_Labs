@@ -48,7 +48,7 @@ public class DataController {
 	 * @return A DataController object
 	 * @throws OdometerExceptions
 	 */
-	public synchronized static DataController getSensorData() throws OdometerExceptions {
+	public synchronized static DataController getDataController() throws OdometerExceptions {
 		if (dataCont != null) { // Return existing object
 			return dataCont;
 		} else if (numberOfInstances < MAX_INSTANCES) { // create object and
@@ -63,12 +63,12 @@ public class DataController {
 	}
 	
 	/**
-	 * Returns the lightGrid and distance data
+	 * Returns the distance data
 	 * 
-	 * @return the sensor data as a double[2]
+	 * @return d
 	 */
-	public double[] getDL() {
-		double[] data = new double[2];
+	public double getD() {
+		double d = 200;
 		lock.lock();
 		try {
 			while (isReseting) { // If a reset operation is being executed, wait
@@ -76,9 +76,8 @@ public class DataController {
 				doneReseting.await(); // Using await() is lighter on the CPU
 				// than simple busy wait.
 			}
-
-			data[0] = lightGrid;
-			data[1] = distance;
+			
+			d = distance;
 
 		} catch (InterruptedException e) {
 			// Print exception to screen
@@ -87,7 +86,34 @@ public class DataController {
 			lock.unlock();
 		}
 		
-		return data;
+		return d;
+	}
+	
+	/**
+	 * Returns the distance data
+	 * 
+	 * @return d
+	 */
+	public double getL() {
+		double l = 0.8;
+		lock.lock();
+		try {
+			while (isReseting) { // If a reset operation is being executed, wait
+				// until it is over.
+				doneReseting.await(); // Using await() is lighter on the CPU
+				// than simple busy wait.
+			}
+			
+			l = lightGrid;
+
+		} catch (InterruptedException e) {
+			// Print exception to screen
+			e.printStackTrace();
+		} finally {
+			lock.unlock();
+		}
+		
+		return l;
 	}
 	
 	/**
@@ -153,7 +179,6 @@ public class DataController {
 			lock.unlock();
 		}
 	}
-	
 	
 	/**
 	 * Sets rgb of lightRing array

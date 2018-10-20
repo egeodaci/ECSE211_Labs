@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.localizers;
 
 import ca.mcgill.ecse211.odometer.*;
+import ca.mcgill.ecse211.sensors.DataController;
 import ca.mcgill.ecse211.lab5.*;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
@@ -19,6 +20,7 @@ public class LightLocalizer extends Thread {
   	private static final double BLACK_LINE = 0.18;
   	
 	private Odometer odo;
+	private DataController dataCont;
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
 	private static final SensorModes colorSensor = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
@@ -28,6 +30,7 @@ public class LightLocalizer extends Thread {
 	
 	public LightLocalizer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) throws OdometerExceptions{
 		this.odo = Odometer.getOdometer();
+		this.dataCont = DataController.getDataController();
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
 	}
@@ -35,11 +38,12 @@ public class LightLocalizer extends Thread {
 	
 	public void run() {
 		double saveY = 0.0;
+		double lightIntensity;
 		//move forward till detect line 
 		moveStraight(leftMotor, rightMotor, MAX_DISTANCE, true, true);
 		while(true) {
-			colorSample.fetchSample(colorData, 0);
-			if (colorData[0] < BLACK_LINE) {
+			lightIntensity = dataCont.getL();
+			if (lightIntensity < BLACK_LINE) {
 				Sound.beep();
 				saveY = odo.getXYTD()[1];
 				break;
@@ -51,8 +55,8 @@ public class LightLocalizer extends Thread {
 		moveStraight(leftMotor, rightMotor, MAX_DISTANCE, true, true); 	
 		
 		while(true) {
-			colorSample.fetchSample(colorData, 0);
-			if (colorData[0] < BLACK_LINE) {
+			lightIntensity = dataCont.getL();
+			if (lightIntensity < BLACK_LINE) {
 				Sound.beep(); 
 				break;
 			}
