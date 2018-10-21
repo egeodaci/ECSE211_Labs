@@ -11,16 +11,17 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  */
 public class Navigation {
 	
-	private static final int FORWARD_SPEED = 180;
-  	private static final int ROTATE_SPEED = 150;
+	private static final int FORWARD_SPEED_1 = 180;
+  	private static final int ROTATE_SPEED_1 = 150;
+  	private static final int ROTATE_SPEED_2 = 50;
+  	private static final int FORWARD_SPEED_2 = 60;
+  	private static final double TILE_SIZE = 30.48;
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
   	
   	private Odometer odo;
   	private DataController dataCont;
   	private static boolean isNavigating;
-
-  	
 
     /**
      * Class constructor
@@ -72,7 +73,6 @@ public class Navigation {
 
 	/**
      * This drives the robot to a way point
-     * 
      * @param x
      * @param y
      */
@@ -85,8 +85,8 @@ public class Navigation {
 
 		turnTo(Math.toDegrees(theta));
 		
-		leftMotor.setSpeed(FORWARD_SPEED);
-		rightMotor.setSpeed(FORWARD_SPEED);
+		leftMotor.setSpeed(FORWARD_SPEED_1);
+		rightMotor.setSpeed(FORWARD_SPEED_1);
 
 		leftMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), true);
 		rightMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), true);
@@ -102,15 +102,15 @@ public class Navigation {
 		if(dTheta < 0) dTheta += 360;
 		// turn right
 		if (dTheta > 180) {
-			leftMotor.setSpeed(ROTATE_SPEED);
-			rightMotor.setSpeed(ROTATE_SPEED);
+			leftMotor.setSpeed(ROTATE_SPEED_1);
+			rightMotor.setSpeed(ROTATE_SPEED_1);
 			leftMotor.rotate(-convertAngle(lab5.WHEEL_RAD, lab5.TRACK,360 - dTheta), true);
 			rightMotor.rotate(convertAngle(lab5.WHEEL_RAD, lab5.TRACK, 360 - dTheta), false);
 		}
 		// turn left
 		else { 
-			leftMotor.setSpeed(ROTATE_SPEED);
-			rightMotor.setSpeed(ROTATE_SPEED);
+			leftMotor.setSpeed(ROTATE_SPEED_1);
+			rightMotor.setSpeed(ROTATE_SPEED_1);
 			leftMotor.rotate(convertAngle(lab5.WHEEL_RAD, lab5.TRACK, dTheta), true);
 			rightMotor.rotate(-convertAngle(lab5.WHEEL_RAD, lab5.TRACK, dTheta), false);
 		}
@@ -128,18 +128,74 @@ public class Navigation {
 		return cErr < 4;
 	}
 	
+	/**
+	 * this method changes coordinates to actual in cm
+	 * @param
+	 */
+	public double[] convertCoordinates(int[] xy) {
+		double[] realXY = new double[2];
+		realXY[0] = xy[0] * TILE_SIZE;
+		realXY[1] = xy[1] * TILE_SIZE;
+		return realXY;
+	}
 	
 	/**
-	 * This method changes distance to the equivalent wheel rotation
+	 * 
+	 * @param leftMotor
+	 * @param rightMotor
+	 * @param distance : distance to travel
+	 * @param forwards : if true then it goes forward direction
+	 * @param continueRunning : if true then program does not wait for wheels to stop, false program waits  
+	 */
+	public void moveStraight(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, 
+			double distance, boolean forwards, boolean continueRunning) {
+		int i = 1;
+		if (!forwards) i = -1;
+		leftMotor.setSpeed(FORWARD_SPEED_2);
+	    rightMotor.setSpeed(FORWARD_SPEED_2);
+	    leftMotor.rotate(convertDistance(lab5.WHEEL_RAD, i * distance), true);
+	    rightMotor.rotate(convertDistance(lab5.WHEEL_RAD, i *distance), continueRunning);
+	}
+	
+	/**
+	 * This method turns the robot to the right or left depending on direction boolean and turns the robot by the specified
+	 * degrees amount.
+	 * @param left : motor
+	 * @param right : motor
+	 * @param degrees : degrees to turn by
+	 * @param direction : true means turn right, left otherwise
+	 */
+	public void turnRobot(EV3LargeRegulatedMotor left, EV3LargeRegulatedMotor right, 
+			int degrees, boolean direction, boolean continueRunning) {
+		int i = 1;
+		if (!direction)
+			i = -1;
+		leftMotor.setSpeed(ROTATE_SPEED_2);
+		rightMotor.setSpeed(ROTATE_SPEED_2);
+		leftMotor.rotate(i * convertAngle(lab5.WHEEL_RAD, lab5.TRACK, degrees), true);
+		rightMotor.rotate(i * -convertAngle(lab5.WHEEL_RAD, lab5.TRACK, degrees), continueRunning);
+	}
+	
+	public void stopMotors(EV3LargeRegulatedMotor left, EV3LargeRegulatedMotor right) {
+		left.stop();
+		right.stop();
+		left.setAcceleration(1000);
+		right.setAcceleration(1000);
+	}
+	
+	/**
+	 * This method allows the conversion of a distance to the total rotation of each wheel need to
+	 * cover that distance.
 	 * 
 	 * @param radius
 	 * @param distance
+	 * @return
 	 */
-	public static int convertDistance(double radius, double distance) {
+	private static int convertDistance(double radius, double distance) {
 		return (int) ((180.0 * distance) / (Math.PI * radius));
 	}
-
-	public static int convertAngle(double radius, double width, double angle) {
+	
+	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
 	

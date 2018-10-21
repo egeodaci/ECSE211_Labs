@@ -1,32 +1,36 @@
 package ca.mcgill.ecse211.searcher;
 
+import ca.mcgill.ecse211.lab4.lab4;
 import ca.mcgill.ecse211.lab5.Display;
+import ca.mcgill.ecse211.lab5.lab5;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.sensors.DataController;
 import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
-
-
-
 /**
- * This class will be using Navigation to 
- * 
- *
+ * This class uses Navigation to move to region
+ * then search for the rings
  */
 public class Search extends Thread {
 
-	// Coordinates of search region
+	// class variables
 	public static final int LL_X = 3;
 	public static final int LL_Y = 3;
 	public static final int UR_X = 7;
 	public static final int UR_Y = 7;
-	// 1-blue ; 2-green ; 3-yellow ; 4-orange
-	public static final int TR = 2;
+	public static final int TR = 2; // 1-blue ; 2-green ; 3-yellow ; 4-orange
 	public static final int SC = 0;
+
+	private static int waypoints[][];
 	
-	private static final int THRESHOLD = 15;
+	private static final int RING_INBOUND = 13;
+	private static final int LARGEST_RADIUS = 6;
+	private static final int CENTER_TO_SENSOR = 6; //distance from center of wheels to ring light sensor,  
+													//should be slightly higher than actual value
+	private static final int US_TO_LIGHT = 5; //distance from us sensor to ring light sensor
+	private static final int SLOW_SPEED = 40;
 	
 	private Navigation navigator;
 	private Odometer odo;
@@ -34,13 +38,7 @@ public class Search extends Thread {
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
 	
-	private static int waypoints[][];
-	
-	
-	
-	
-	
-	
+
 	/**
 	 * Constructor
 	 */
@@ -53,14 +51,24 @@ public class Search extends Thread {
 		this.rightMotor = rightMotor;
 	}
 	
+	// this method is for avoiding objects
+	// do standard avoidance by curving around ring touching
+	// on the center of the tile you are crossing and a bit towards the ring
+	// because you can slightly nudge it 
+	public void avoidRing() {
+		
+	}
 	
 	@SuppressWarnings("unused")
 	public void run() {
+		moveToSearchRegion();	
 		
-		moveToSearchRegion();	// go to start of search region
+		//use sensors on both sides to correct for straight passing
+		//	can turn on this thread only when correcting
+		//	can either have correction thread running algorithm or correct every so and so
+		
 		waypoints = createWayPoints(LL_X, LL_Y, UR_X, UR_Y);	// create waypoints to travel to
 		
-		//define variables
 		int[] nextXY = new int[2];
 		double d;
 		boolean isNotConsecutiveRing = true;
@@ -68,14 +76,14 @@ public class Search extends Thread {
 		//move to next point
 		for (int i = 0; i < waypoints.length; i++) {
 			nextXY = waypoints[i];
-			navigator.travelToCoordinate(nextXY[0], nextXY[1]);
+			navigator.travelToCoordinate(nextXY[0], nextXY[1]); 
 			while(true) {
 				d = dataCont.getD();
-				if (d < THRESHOLD) { //ring detected
-					//stop motors
-					stopMotors(leftMotor, rightMotor);
-					//detect what color it is (maybe have to move close or back)
-					detectRingColor();
+				if (d < RING_INBOUND) { //ring detected ahead
+					getInPosition(navigator.convertCoordinates(nextXY));
+					detectRingColor(navigator.convertCoordinates(nextXY));
+
+					//display on screen
 					//avoid
 					if (isNotConsecutiveRing) {
 						
@@ -90,36 +98,94 @@ public class Search extends Thread {
 		//			so that avoiding is easier with that route
 		//		if the ring is at the end of a row then avoid using different technique to set up for next row
 		//if there is another ring detect and analyze, then avoid again
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		Display.objectDetected();
 	}
 	
-	
-	private void detectRingColor() {
-		//might have to adjust distance to ring
-		
-		
+	/**
+	 * this method is to stop the robot just before the 
+	 * start of the largest ring to avoid detecting the floor
+	 * @param xy target x and y coordinates as real values in cm
+	 */
+	private void getInPosition(double[] xy) {
+		double d;
+		slowDownMotors(leftMotor, rightMotor, SLOW_SPEED); //slow motors down
+		while(true) {
+			d = dataCont.getD();
+			if(d < US_TO_LIGHT || isWithinRange(xy[0], xy[1])) { 
+				stopMotors(leftMotor, rightMotor);
+				break;
+			}
+		}
 	}
 
+	/** 
+	 * Detects what color the ring is, beeps twice if not target ring,
+	 * once if target ring, display on screen
+	 * @return ring color code
+	 */
+	private int detectRingColor(double[] xy) {
+		slowDownMotors(leftMotor, rightMotor, SLOW_SPEED); //slow motors down
+		
+		int[] samples = new int[30];
+		int colorCode = 0, i = 0;
+		while(true) {
+			if(i < samples.length) {
+				colorCode = ColorDetector.detectColor(dataCont.getRGB());//gets sensor data and passes to colordetector class
+				samples[i] = colorCode;
+				i++;
+				break;
+			}
+			
+		}
+		return colorCode;
+	}
+	
+//	Display.objectDetected();
+//	if (colorCode == TR) {
+//		Sound.beep();
+//		return true;
+//	} else {
+//		Sound.beep();
+//		Sound.beep();
+//		return false;
+//	}
+	
+	/**
+	 * This method takes the waypoints the robot is moving to
+	 * and checks to see if its current position of sensor is over
+	 * the largest ring
+	 * @param x
+	 * @param y
+	 */
+	private boolean isWithinRange(double x, double y) {
+		if(Math.abs(odo.getXYT()[0] - x) < (CENTER_TO_SENSOR + LARGEST_RADIUS) 
+				|| Math.abs(odo.getXYT()[2] - y) < (CENTER_TO_SENSOR + LARGEST_RADIUS))
+			return true;
+		else 
+			return false;
+	}
+	
+	public void moveForward(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, 
+			double distance, int speed, boolean continueRunning) {
+		leftMotor.setSpeed(speed);
+	    rightMotor.setSpeed(speed);
+	    leftMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), true);
+	    rightMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), continueRunning);
+	}
+	
+	private void slowDownMotors(EV3LargeRegulatedMotor leftMotor2, EV3LargeRegulatedMotor rightMotor2, int speed) {
+		leftMotor.setSpeed(speed);
+	    rightMotor.setSpeed(speed);
+	}
 
+	/**
+	 * stops the motors 
+	 */
 	public void stopMotors(EV3LargeRegulatedMotor left, EV3LargeRegulatedMotor right) {
-		left.stop();
+		left.flt();
+		right.flt();
 		left.setAcceleration(1000);
-		right.stop();
 		right.setAcceleration(1000);
 	}
-	
-	
-
 	
 	/**
 	 * This method moves the robot to the start of the search region
@@ -133,18 +199,11 @@ public class Search extends Thread {
 		}
 		Sound.beep();
 	}
-
-
-	// this method is for avoiding objects
-	// do standard avoidance by curving around ring touching
-	// on the center of the tile you are crossing and a bit towards the ring
-	// because you can slightly nudge it 
-	public void avoidRing() {}
-	
 	
 	/**
 	 * This method takes in the coordinates of search region and 
 	 * creates the points the robot will travel to, in the shape of a zig zag
+	 * so we loop through the points and go to each of them
 	 * @param lx
 	 * @param ly
 	 * @param ux
@@ -172,19 +231,6 @@ public class Search extends Thread {
 		}
 		return waypoints;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 }

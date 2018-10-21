@@ -19,6 +19,11 @@ import lejos.robotics.SampleProvider;
 
 ///////// TODO /////////
 // - update ultrasonic localizer so that it takes the median of several readings
+// - use us sensors on both sides to correct for odometry
+
+//Design of robot
+//	- light sensor front does not have to be so far out can have it close to us sensor
+//	- should see how well us sensor detects any ring, if its close does it do really well?
 
 
 public class lab5 {
@@ -41,7 +46,7 @@ public class lab5 {
 		Navigation navigator = new Navigation(leftMotor, rightMotor);
 		Search tracker = new Search(navigator, leftMotor, rightMotor);
 		UltrasonicLocalizer uLocalizer = new UltrasonicLocalizer(leftMotor, rightMotor);
-		LightLocalizer lLocalizer = new LightLocalizer(leftMotor, rightMotor);
+		LightLocalizer lLocalizer = new LightLocalizer(leftMotor, rightMotor, navigator);
 		DataController dataCont = DataController.getDataController();
 		 
 		@SuppressWarnings("resource")

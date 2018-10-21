@@ -1,5 +1,8 @@
 package ca.mcgill.ecse211.searcher;
 
+/**
+ * this class handles the color detection of the ring
+ */
 public class ColorDetector {
 
 	/*
