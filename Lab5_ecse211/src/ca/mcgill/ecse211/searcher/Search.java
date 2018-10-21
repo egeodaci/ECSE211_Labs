@@ -1,8 +1,7 @@
 package ca.mcgill.ecse211.searcher;
 
-import ca.mcgill.ecse211.lab4.lab4;
+import java.util.ArrayList;
 import ca.mcgill.ecse211.lab5.Display;
-import ca.mcgill.ecse211.lab5.lab5;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.sensors.DataController;
@@ -31,6 +30,8 @@ public class Search extends Thread {
 													//should be slightly higher than actual value
 	private static final int US_TO_LIGHT = 5; //distance from us sensor to ring light sensor
 	private static final int SLOW_SPEED = 40;
+	private static final int ULTRA_SLOW_SPEED = 20;
+	private static final int RING_WIDTH = 3;
 	
 	private Navigation navigator;
 	private Odometer odo;
@@ -51,13 +52,6 @@ public class Search extends Thread {
 		this.rightMotor = rightMotor;
 	}
 	
-	// this method is for avoiding objects
-	// do standard avoidance by curving around ring touching
-	// on the center of the tile you are crossing and a bit towards the ring
-	// because you can slightly nudge it 
-	public void avoidRing() {
-		
-	}
 	
 	@SuppressWarnings("unused")
 	public void run() {
@@ -82,8 +76,6 @@ public class Search extends Thread {
 				if (d < RING_INBOUND) { //ring detected ahead
 					getInPosition(navigator.convertCoordinates(nextXY));
 					detectRingColor(navigator.convertCoordinates(nextXY));
-
-					//display on screen
 					//avoid
 					if (isNotConsecutiveRing) {
 						
@@ -118,37 +110,34 @@ public class Search extends Thread {
 	}
 
 	/** 
-	 * Detects what color the ring is, beeps twice if not target ring,
-	 * once if target ring, display on screen
 	 * @return ring color code
 	 */
 	private int detectRingColor(double[] xy) {
-		slowDownMotors(leftMotor, rightMotor, SLOW_SPEED); //slow motors down
-		
-		int[] samples = new int[30];
-		int colorCode = 0, i = 0;
-		while(true) {
-			if(i < samples.length) {
-				colorCode = ColorDetector.detectColor(dataCont.getRGB());//gets sensor data and passes to colordetector class
-				samples[i] = colorCode;
-				i++;
-				break;
-			}
-			
+		navigator.moveStraight(leftMotor, rightMotor, RING_WIDTH, ULTRA_SLOW_SPEED, true, true);
+		ArrayList<Integer> samples = new ArrayList<Integer>();
+		int colorCode = 0;
+		while(leftMotor.isMoving()) {
+			colorCode = ColorDetector.detectColor(dataCont.getRGB()); //gets sensor data and passes to colordetector class
+			samples.add(colorCode);
 		}
+		colorCode = findMode(samples);
+		Display.objectDetected(colorCode);
 		return colorCode;
 	}
 	
-//	Display.objectDetected();
-//	if (colorCode == TR) {
-//		Sound.beep();
-//		return true;
-//	} else {
-//		Sound.beep();
-//		Sound.beep();
-//		return false;
-//	}
-	
+	private int findMode(ArrayList<Integer> samples) {
+		int [] data = new int[4];
+		for(Integer sample : samples)
+			data[sample-1]++;
+		int mode = 0, temp = data[0];
+		for(int i = 1; i < 4; i++){
+			if(data[i] > temp){
+				mode = i;
+				temp = data[i];
+			}
+		}
+		return mode + 1;
+	}
 	/**
 	 * This method takes the waypoints the robot is moving to
 	 * and checks to see if its current position of sensor is over
@@ -164,12 +153,12 @@ public class Search extends Thread {
 			return false;
 	}
 	
-	public void moveForward(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, 
-			double distance, int speed, boolean continueRunning) {
-		leftMotor.setSpeed(speed);
-	    rightMotor.setSpeed(speed);
-	    leftMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), true);
-	    rightMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), continueRunning);
+	// this method is for avoiding objects
+	// do standard avoidance by curving around ring touching
+	// on the center of the tile you are crossing and a bit towards the ring
+	// because you can slightly nudge it 
+	public void avoidRing() {
+		
 	}
 	
 	private void slowDownMotors(EV3LargeRegulatedMotor leftMotor2, EV3LargeRegulatedMotor rightMotor2, int speed) {

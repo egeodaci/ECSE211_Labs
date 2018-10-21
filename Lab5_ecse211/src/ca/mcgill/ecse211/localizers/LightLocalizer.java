@@ -11,6 +11,8 @@ public class LightLocalizer extends Thread {
 	
   	private static final int MAX_DISTANCE = 30;
   	private static final int RIGHT_ANGLE = 90; 
+  	private static final int FORWARD_SPEED = 60;
+  	private static final int ROTATE_SPEED = 50;
   	private static final int LIGHTSENSOR_TO_ROBOTCENTER = 4;
   	private static final double BLACK_LINE = 0.18;
   	
@@ -33,7 +35,7 @@ public class LightLocalizer extends Thread {
 		double saveY = 0.0;
 		double lightIntensity;
 		//move forward till detect line 
-		navigator.moveStraight(leftMotor, rightMotor, MAX_DISTANCE, true, true);
+		navigator.moveStraight(leftMotor, rightMotor, MAX_DISTANCE, FORWARD_SPEED, true, true);
 		while(true) {
 			lightIntensity = dataCont.getL();
 			if (lightIntensity < BLACK_LINE) {
@@ -43,9 +45,9 @@ public class LightLocalizer extends Thread {
 			}
 		}
 		
-		navigator.moveStraight(leftMotor, rightMotor, saveY, false, false); 	//move backward by y traveled
-		navigator.turnRobot(leftMotor, rightMotor, RIGHT_ANGLE, true, false);	//turn right 90 degrees and straight
-		navigator.moveStraight(leftMotor, rightMotor, MAX_DISTANCE, true, true); 	
+		navigator.moveStraight(leftMotor, rightMotor, saveY, FORWARD_SPEED, false, false); 	//move backward by y traveled
+		navigator.turnRobot(leftMotor, rightMotor, RIGHT_ANGLE, ROTATE_SPEED, true, false);	//turn right 90 degrees and straight
+		navigator.moveStraight(leftMotor, rightMotor, MAX_DISTANCE, FORWARD_SPEED, true, true); 	
 		
 		while(true) {
 			lightIntensity = dataCont.getL();
@@ -55,10 +57,10 @@ public class LightLocalizer extends Thread {
 			}
 		}
 		// move distance of sensor-robotCenter
-		navigator.moveStraight(leftMotor, rightMotor, LIGHTSENSOR_TO_ROBOTCENTER, true, false); 
+		navigator.moveStraight(leftMotor, rightMotor, LIGHTSENSOR_TO_ROBOTCENTER, FORWARD_SPEED, true, false); 
 		// turn left 90 degrees
-		navigator.turnRobot(leftMotor, rightMotor, RIGHT_ANGLE, false, false); 	
+		navigator.turnRobot(leftMotor, rightMotor, RIGHT_ANGLE, ROTATE_SPEED, false, false); 	
 		// move forward by saved y value + sensor-robotCenter
-		navigator.moveStraight(leftMotor, rightMotor, (LIGHTSENSOR_TO_ROBOTCENTER + saveY), true, false); 
+		navigator.moveStraight(leftMotor, rightMotor, (LIGHTSENSOR_TO_ROBOTCENTER + saveY), FORWARD_SPEED, true, false); 
 	}
 }

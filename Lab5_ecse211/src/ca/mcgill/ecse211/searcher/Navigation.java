@@ -11,10 +11,8 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  */
 public class Navigation {
 	
-	private static final int FORWARD_SPEED_1 = 180;
-  	private static final int ROTATE_SPEED_1 = 150;
-  	private static final int ROTATE_SPEED_2 = 50;
-  	private static final int FORWARD_SPEED_2 = 60;
+	private static final int FORWARD_SPEED = 180;
+  	private static final int ROTATE_SPEED = 150;
   	private static final double TILE_SIZE = 30.48;
   	private EV3LargeRegulatedMotor leftMotor;
   	private EV3LargeRegulatedMotor rightMotor;
@@ -85,8 +83,8 @@ public class Navigation {
 
 		turnTo(Math.toDegrees(theta));
 		
-		leftMotor.setSpeed(FORWARD_SPEED_1);
-		rightMotor.setSpeed(FORWARD_SPEED_1);
+		leftMotor.setSpeed(FORWARD_SPEED);
+		rightMotor.setSpeed(FORWARD_SPEED);
 
 		leftMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), true);
 		rightMotor.rotate(convertDistance(lab5.WHEEL_RAD, distance), true);
@@ -102,15 +100,15 @@ public class Navigation {
 		if(dTheta < 0) dTheta += 360;
 		// turn right
 		if (dTheta > 180) {
-			leftMotor.setSpeed(ROTATE_SPEED_1);
-			rightMotor.setSpeed(ROTATE_SPEED_1);
+			leftMotor.setSpeed(ROTATE_SPEED);
+			rightMotor.setSpeed(ROTATE_SPEED);
 			leftMotor.rotate(-convertAngle(lab5.WHEEL_RAD, lab5.TRACK,360 - dTheta), true);
 			rightMotor.rotate(convertAngle(lab5.WHEEL_RAD, lab5.TRACK, 360 - dTheta), false);
 		}
 		// turn left
 		else { 
-			leftMotor.setSpeed(ROTATE_SPEED_1);
-			rightMotor.setSpeed(ROTATE_SPEED_1);
+			leftMotor.setSpeed(ROTATE_SPEED);
+			rightMotor.setSpeed(ROTATE_SPEED);
 			leftMotor.rotate(convertAngle(lab5.WHEEL_RAD, lab5.TRACK, dTheta), true);
 			rightMotor.rotate(-convertAngle(lab5.WHEEL_RAD, lab5.TRACK, dTheta), false);
 		}
@@ -148,11 +146,11 @@ public class Navigation {
 	 * @param continueRunning : if true then program does not wait for wheels to stop, false program waits  
 	 */
 	public void moveStraight(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, 
-			double distance, boolean forwards, boolean continueRunning) {
+			double distance, int speed, boolean forwards, boolean continueRunning) {
 		int i = 1;
 		if (!forwards) i = -1;
-		leftMotor.setSpeed(FORWARD_SPEED_2);
-	    rightMotor.setSpeed(FORWARD_SPEED_2);
+		leftMotor.setSpeed(speed);
+	    rightMotor.setSpeed(speed);
 	    leftMotor.rotate(convertDistance(lab5.WHEEL_RAD, i * distance), true);
 	    rightMotor.rotate(convertDistance(lab5.WHEEL_RAD, i *distance), continueRunning);
 	}
@@ -166,12 +164,12 @@ public class Navigation {
 	 * @param direction : true means turn right, left otherwise
 	 */
 	public void turnRobot(EV3LargeRegulatedMotor left, EV3LargeRegulatedMotor right, 
-			int degrees, boolean direction, boolean continueRunning) {
+			int degrees, int speed, boolean direction, boolean continueRunning) {
 		int i = 1;
 		if (!direction)
 			i = -1;
-		leftMotor.setSpeed(ROTATE_SPEED_2);
-		rightMotor.setSpeed(ROTATE_SPEED_2);
+		leftMotor.setSpeed(speed);
+		rightMotor.setSpeed(speed);
 		leftMotor.rotate(i * convertAngle(lab5.WHEEL_RAD, lab5.TRACK, degrees), true);
 		rightMotor.rotate(i * -convertAngle(lab5.WHEEL_RAD, lab5.TRACK, degrees), continueRunning);
 	}
