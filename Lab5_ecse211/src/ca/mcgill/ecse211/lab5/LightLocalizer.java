@@ -89,8 +89,8 @@ public class LightLocalizer extends Thread implements Runnable {
 
 		// Align the robot to 0degrees
 		Navigation.turnWithTheta(0);
-		Navigation.travelTo(0, 0);
-
+//		Navigation.travelTo(0, 0);
+		Lab5.isLightLocalizingTurn = false;
 
 
 	}
