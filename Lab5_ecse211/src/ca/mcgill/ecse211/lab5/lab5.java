@@ -20,7 +20,7 @@ public class Lab5 {
 	public static final TextLCD lcd = LocalEV3.get().getTextLCD();
 	public static final double WHEEL_RAD = 2.2;
 	public static final double SQUARE_SIZE = 30.48;
-	public static final double TRACK = 14.0;
+	public static final double TRACK = 14.35;
 	public static boolean isUSLocalizing = false;
 	public static boolean isLightLocalizing = false;
 	public static boolean isLightLocalizingTurn = false;
