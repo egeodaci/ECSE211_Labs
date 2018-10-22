@@ -40,6 +40,8 @@ public class Lab5 {
 	static final Port usPort = LocalEV3.get().getPort("S1");
 	static final Port portColor = LocalEV3.get().getPort("S2");
 	static final Port portGyro = LocalEV3.get().getPort("S3");
+	static final Port portRing = LocalEV3.get().getPort("S4");
+
 
 	public static final EV3LargeRegulatedMotor leftMotor =
 			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
