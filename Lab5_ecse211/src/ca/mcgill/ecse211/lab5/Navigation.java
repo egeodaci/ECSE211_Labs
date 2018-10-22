@@ -15,50 +15,50 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  */
 public class Navigation {
 
-    
-    // Parameters: Can adjust these for desired performance
-    private static final int MOTOR_HIGH = 100;     // Speed of the faster rotating wheel (deg/seec)
-    private static final int ROTATE_SPEED = 60;   // Speed upon rotation
-    private final static double ODOMETER_ADJUSTMENT = 0.5;    // Adjusts the inaccuracy of the odometer
+	
+	// Parameters: Can adjust these for desired performance
+	private static final int MOTOR_HIGH = 100;     // Speed of the faster rotating wheel (deg/seec)
+	private static final int ROTATE_SPEED = 45;   // Speed upon rotation
+	private final static double ODOMETER_ADJUSTMENT = 0.5;    // Adjusts the inaccuracy of the odometer
 
-    //Motors initialized
-    public static EV3LargeRegulatedMotor leftMotor;
-    public static EV3LargeRegulatedMotor rightMotor;
-    
-    // Variables for odometer
-    Odometer odometer = null;
-    private static double prevAngle = 0;
-    static boolean navigating = false;
+	//Motors initialized
+	public static EV3LargeRegulatedMotor leftMotor;
+	public static EV3LargeRegulatedMotor rightMotor;
+
+	// Variables for odometer
+	Odometer odometer = null;
+	private static double prevAngle = 0;
+	static boolean navigating = false;
 
 
-    /**
-     * Contructor, takes in and sets path passed by user
-     * selection in Controller class
-     * 
-     * @param finalPath
-     */
-    public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
-        Navigation.leftMotor = leftMotor;
-        Navigation.rightMotor = rightMotor;
-        try {
+	/**
+	 * Contructor, takes in and sets path passed by user
+	 * selection in Controller class
+	 * 
+	 * @param finalPath
+	 */
+	public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, Odometer odometer) {
+		Navigation.leftMotor = leftMotor;
+		Navigation.rightMotor = rightMotor;
+		try {
 			this.odometer = Odometer.getOdometer(Navigation.leftMotor, Navigation.rightMotor, Lab5.TRACK, Lab5.WHEEL_RAD);
 		} catch (OdometerExceptions e) {
 			System.out.println("no odo");
 		}
-    }
+	}
 
-    /**
-     * This method makes robot move in the direction of the
-     * waypoint whose coordinates are passed as arguments
-     * 
-     * @param x
-     * @param y
-     * @return void
-     */ 
-    public static void travelTo(double x, double y) {
+	/**
+	 * This method makes robot move in the direction of the
+	 * waypoint whose coordinates are passed as arguments
+	 * 
+	 * @param x
+	 * @param y
+	 * @return void
+	 */ 
+	public static void travelTo(double x, double y) {
 		// Define variables
 		double odometer[] = { 0, 0, 0 }, absAngle = 0, dist = 0, deltaX = 0, deltaY = 0;
-		
+
 		// Set navigating to true
 		navigating = true;
 
@@ -80,7 +80,7 @@ public class Navigation {
 		// Get displacement to travel on X and Y axis
 		deltaX = x - odometer[0];
 		deltaY = y - odometer[1];
-		
+
 		// Displacement to point (hypothenuse)
 		dist = Math.hypot(Math.abs(deltaX), Math.abs(deltaY));
 
@@ -98,31 +98,31 @@ public class Navigation {
 		leftMotor.setSpeed(MOTOR_HIGH);
 		rightMotor.setSpeed(MOTOR_HIGH);
 
-		
+
 		// Move distance to the waypoint after robot has adjusted angle
 		leftMotor.rotate(convertDistance(Lab5.WHEEL_RAD, dist), true);
 		rightMotor.rotate(convertDistance(Lab5.WHEEL_RAD, dist), false);
 
 	}
-    
-    /**
-     * This method causes robot to travel a distance based on the
-     * hypotenus value obtained from performing pythagoras
-     * theorem on x and y
-     * @param x
-     * @param y
-     * @throws OdometerExceptions
-     */
-    static void travelToHypot(double x, double y) throws OdometerExceptions {
+
+	/**
+	 * This method causes robot to travel a distance based on the
+	 * hypotenus value obtained from performing pythagoras
+	 * theorem on x and y
+	 * @param x
+	 * @param y
+	 * @throws OdometerExceptions
+	 */
+	static void travelToHypot(double x, double y) throws OdometerExceptions {
 		double calcTheta = 0, distance = 0, deltaX = 0, deltaY = 0;
 
-        double[] odometer = Odometer.getOdometer().getXYT();
+		double[] odometer = Odometer.getOdometer().getXYT();
 
 		double odoAngle = odometer[2];
 
 		deltaX = x*Lab5.SQUARE_SIZE- odometer[0];;
 		deltaY = y*Lab5.SQUARE_SIZE - odometer[1];
-	
+
 		distance = Math.hypot(Math.abs(deltaX), Math.abs(deltaY));
 		calcTheta = Math.toDegrees(Math.atan2(deltaX, deltaY));
 
@@ -132,7 +132,7 @@ public class Navigation {
 
 		// turn to the found angle
 		turnTo(calcTheta);
-	
+
 
 		// go
 		leftMotor.setSpeed(Navigation.MOTOR_HIGH);
@@ -140,15 +140,65 @@ public class Navigation {
 		leftMotor.rotate(convertDistance(Lab5.WHEEL_RAD, distance), true);
 		rightMotor.rotate(convertDistance(Lab5.WHEEL_RAD, distance), true);
 
-		
+
 	}
-    
-    /**
-     * This method causes the robot to turn (on point) to the relative heading theta
-     * (turn by)
-     * @param theta
-     * @return void
-     */ 
+
+	/**
+	 * method uses gyro to ensure that we turn the specified corrected amount
+	 * @param theta
+	 */
+	public static void correctedTurnTo(double theta) {
+		boolean turnLeft = false;
+		double[] odometer = null;
+		try {
+			odometer = Odometer.getOdometer().getXYT();
+		} catch (OdometerExceptions e1) {
+		}
+
+		// If deltaAngle is negative, loop it back
+		if (theta < 0) {
+			theta = 360 - Math.abs(theta);
+		}
+
+		// Check if we want to move left or right
+		if (theta > 180) {
+			turnLeft = true;
+			theta = 360 - Math.abs(theta);
+		} else {
+			turnLeft = false;
+		}
+
+		// Set slower rotate speed
+		leftMotor.setSpeed(ROTATE_SPEED);
+		rightMotor.setSpeed(ROTATE_SPEED);
+
+		// Turn motors according to which direction we want to turn in
+		if (turnLeft) {
+			leftMotor.backward();
+			rightMotor.forward();
+		} else {
+			leftMotor.forward();
+			rightMotor.backward();
+		}
+		while(true) {
+			try {
+				odometer = Odometer.getOdometer().getXYT();
+			} catch (OdometerExceptions e) {
+			}
+			if((odometer[2] == theta) || ((odometer[2] < theta+1) && (odometer[2] > theta-1))) {
+				leftMotor.stop();
+				rightMotor.stop();
+			}
+		}
+
+	}
+
+	/**
+	 * This method causes the robot to turn (on point) to the relative heading theta
+	 * (turn by)
+	 * @param theta
+	 * @return void
+	 */ 
 	public static void turnTo(double theta) {
 		boolean turnLeft = false;
 		double deltaAngle = 0;
@@ -182,16 +232,16 @@ public class Navigation {
 		}
 
 	}
-	
-    /**
-     * This method uses the current angle as a reference
-     * to turn to the angle required
-     * @param theta: angle to turn by
-     * @throws OdometerExceptions
-     */
-    public static void turnWithTheta(double theta) throws OdometerExceptions {
 
-    	boolean turnLeft = false;
+	/**
+	 * This method uses the current angle as a reference
+	 * to turn to the angle required
+	 * @param theta: angle to turn by
+	 * @throws OdometerExceptions
+	 */
+	public static void turnWithTheta(double theta) throws OdometerExceptions {
+
+		boolean turnLeft = false;
 		double deltaAngle = 0;
 		// Get change in angle we want
 		prevAngle = Odometer.getOdometer().getXYT()[2];
@@ -223,38 +273,38 @@ public class Navigation {
 			rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, deltaAngle), false);
 		}
 
-    }
+	}
 
-    /**
-     * This method returns the static boolean, navigating
-     * 
-     * @return boolean
-     */
-    public static boolean isNavigating() {
-        return navigating;
-    }
+	/**
+	 * This method returns the static boolean, navigating
+	 * 
+	 * @return boolean
+	 */
+	public static boolean isNavigating() {
+		return navigating;
+	}
 
-    /**
-     * This method is a helper that allows the conversion of a distance to the total rotation of each wheel need to
-     * cover that distance.
-     * 
-     * @param radius
-     * @param distance
-     * @return int
-     */
-    static int convertDistance(double radius, double distance) {
-        return (int) ((180.0 * distance) / (Math.PI * radius));
-    }
+	/**
+	 * This method is a helper that allows the conversion of a distance to the total rotation of each wheel need to
+	 * cover that distance.
+	 * 
+	 * @param radius
+	 * @param distance
+	 * @return int
+	 */
+	static int convertDistance(double radius, double distance) {
+		return (int) ((180.0 * distance) / (Math.PI * radius));
+	}
 
-    /**
-     * This method allows the conversion of an angle and it's calculated distance to the total rotation of each wheel need to
-     * cover that distance.
-     * 
-     * @param radius
-     * @param distance
-     * @return int
-     */
-    static int convertAngle(double radius, double width, double angle) {
-        return convertDistance(radius, Math.PI * width * angle / 360.0);
-    }
+	/**
+	 * This method allows the conversion of an angle and it's calculated distance to the total rotation of each wheel need to
+	 * cover that distance.
+	 * 
+	 * @param radius
+	 * @param distance
+	 * @return int
+	 */
+	static int convertAngle(double radius, double width, double angle) {
+		return convertDistance(radius, Math.PI * width * angle / 360.0);
+	}
 }
