@@ -18,9 +18,9 @@ public class Lab5 {
 
 	// Instantiate relevant variables 
 	public static final TextLCD lcd = LocalEV3.get().getTextLCD();
-	public static final double WHEEL_RAD = 2.2;
+	public static final double WHEEL_RAD = 2.14;
 	public static final double SQUARE_SIZE = 30.48;
-	public static final double TRACK = 14.35;
+	public static final double TRACK = 14.30;
 	public static boolean isUSLocalizing = false;
 	public static boolean isLightLocalizing = false;
 	public static boolean isLightLocalizingTurn = false;
@@ -95,11 +95,11 @@ public class Lab5 {
 		isLightLocalizing = false;
 		isLightLocalizingTurn = false;
 		
-		odometer.setXYT(0, 0, 0);
+		odometer.setXYT(SQUARE_SIZE,SQUARE_SIZE , 0);
 		((EV3GyroSensor) Odometer.myGyro).reset();
 
 		isGoingToLL = true;
-		Navigation.travelTo(0, LLy);
+		Navigation.travelTo(1, LLy);
 		Navigation.travelTo(LLx, LLy);
 
 

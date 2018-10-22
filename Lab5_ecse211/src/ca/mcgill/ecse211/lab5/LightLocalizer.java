@@ -146,7 +146,8 @@ public class LightLocalizer extends Thread implements Runnable {
 	}
 
 	private void goToOrigin() throws OdometerExceptions {
-
+		Navigation.leftMotor.setAcceleration(1000);
+		Navigation.rightMotor.setAcceleration(1000);
 		Navigation.leftMotor.setSpeed(UltrasonicLocalizer.MOTOR_SPEED);	
 		Navigation.rightMotor.setSpeed(UltrasonicLocalizer.MOTOR_SPEED);
 

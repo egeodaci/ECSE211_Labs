@@ -18,7 +18,7 @@ public class Navigation {
 	
 	// Parameters: Can adjust these for desired performance
 	private static final int MOTOR_HIGH = 100;     // Speed of the faster rotating wheel (deg/seec)
-	private static final int ROTATE_SPEED = 45;   // Speed upon rotation
+	private static final int ROTATE_SPEED = 30;   // Speed upon rotation
 	private final static double ODOMETER_ADJUSTMENT = 0.5;    // Adjusts the inaccuracy of the odometer
 
 	//Motors initialized
@@ -92,12 +92,13 @@ public class Navigation {
 			absAngle = 360 - Math.abs(absAngle);
 
 		// Make robot turn to the absolute angle
-		turnTo(absAngle);
+		correctedTurnTo(absAngle);
 
 		// Set robot speed
 		leftMotor.setSpeed(MOTOR_HIGH);
 		rightMotor.setSpeed(MOTOR_HIGH);
-
+		leftMotor.setAcceleration(1000);
+		rightMotor.setAcceleration(1000);
 
 		// Move distance to the waypoint after robot has adjusted angle
 		leftMotor.rotate(convertDistance(Lab5.WHEEL_RAD, dist), true);
@@ -171,23 +172,26 @@ public class Navigation {
 		// Set slower rotate speed
 		leftMotor.setSpeed(ROTATE_SPEED);
 		rightMotor.setSpeed(ROTATE_SPEED);
+		leftMotor.setAcceleration(1000);
+		rightMotor.setAcceleration(1000);
 
-		// Turn motors according to which direction we want to turn in
-		if (turnLeft) {
-			leftMotor.backward();
-			rightMotor.forward();
-		} else {
-			leftMotor.forward();
-			rightMotor.backward();
-		}
 		while(true) {
 			try {
 				odometer = Odometer.getOdometer().getXYT();
 			} catch (OdometerExceptions e) {
 			}
-			if((odometer[2] == theta) || ((odometer[2] < theta+1) && (odometer[2] > theta-1))) {
-				leftMotor.stop();
-				rightMotor.stop();
+			if(((odometer[2] < theta+1) && (odometer[2] > theta-1))) {
+				Navigation.leftMotor.stop(true);
+				Navigation.rightMotor.stop(false);
+				break;
+			}
+			// Turn motors according to which direction we want to turn in
+			if (turnLeft) {
+				leftMotor.backward();
+				rightMotor.forward();
+			} else {
+				leftMotor.forward();
+				rightMotor.backward();
 			}
 		}
 
