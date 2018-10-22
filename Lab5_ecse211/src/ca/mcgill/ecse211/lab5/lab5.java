@@ -1,107 +1,100 @@
 package ca.mcgill.ecse211.lab5;
 
-import ca.mcgill.ecse211.localizers.*;
-import ca.mcgill.ecse211.odometer.*;
-import ca.mcgill.ecse211.searcher.Navigation;
-import ca.mcgill.ecse211.searcher.Search;
-import ca.mcgill.ecse211.sensors.DataController;
-import ca.mcgill.ecse211.sensors.LightColorPoller;
-import ca.mcgill.ecse211.sensors.LightPoller;
-import ca.mcgill.ecse211.sensors.UltrasonicPoller;
+import ca.mcgill.ecse211.lab5.UltrasonicLocalizer.LocalizationType;
 import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
+import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.SampleProvider;
+import lejos.hardware.port.Port;
 
+/**
+ * Class with main method to start the UI
+ * @author Huzaifa, Jake
+ *
+ */
+public class Lab5 {
 
-///////// TODO /////////
-// - update ultrasonic localizer so that it takes the median of several readings
-// - use us sensors on both sides to correct for odometry
-
-//Design of robot
-//	- light sensor front does not have to be so far out can have it close to us sensor
-//	- should see how well us sensor detects any ring, if its close does it do really well?
-
-
-public class lab5 {
-	
-	 // Motor objects and robot parameters
-	private static final EV3LargeRegulatedMotor leftMotor =
-			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-	private static final EV3LargeRegulatedMotor rightMotor =
-			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
-
- 
+	// Instantiate relevant variables 
+	public static final TextLCD lcd = LocalEV3.get().getTextLCD();
 	public static final double WHEEL_RAD = 2.2;
-	public static final double TRACK = 11.3;
+	public static final double SQUARE_SIZE = 30.48;
+	public static final double TRACK = 13.75;
+	public static boolean isUSLocalizing = false;
+	public static boolean isLightLocalizing = false;
+	public static boolean isLightLocalizingTurn = false;
+	public static boolean isGoingToLL = false;
+
+	static Odometer odometer = null;
 	
-	
-	 
+	public static final int LLx = 2;
+	public static final int LLy = 2;
+	public static final int URx = 7;
+	public static final int URy = 7;
+	public static final int SC = 0;
+	public static final int TR = 1;
+
+
+
+	//Motors and sensor initialization
+	static final Port usPort = LocalEV3.get().getPort("S1");
+	static final Port portColor = LocalEV3.get().getPort("S2");
+	public static final EV3LargeRegulatedMotor leftMotor =
+			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+	public static final EV3LargeRegulatedMotor rightMotor =
+			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
+
+
 	public static void main(String[] args) throws OdometerExceptions {
-		
-		Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); 
-		Navigation navigator = new Navigation(leftMotor, rightMotor);
-		Search tracker = new Search(navigator, leftMotor, rightMotor);
-		UltrasonicLocalizer uLocalizer = new UltrasonicLocalizer(leftMotor, rightMotor);
-		LightLocalizer lLocalizer = new LightLocalizer(leftMotor, rightMotor, navigator);
-		DataController dataCont = DataController.getDataController();
-		 
-		@SuppressWarnings("resource")
-		SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S1")); 
-		SampleProvider usDistance = usSensor.getMode("Distance");
-		float[] usData = new float[usDistance.sampleSize()];
-		
-		@SuppressWarnings("resource")
-		SensorModes lightSensor = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
-		SampleProvider lightSample = lightSensor.getMode("Red");
-		float[] lightData = new float[lightSensor.sampleSize()];
-		
-		@SuppressWarnings("resource")
-		SensorModes ringSensor = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
-		SampleProvider ringSample = ringSensor.getMode("Red");
-		float[] ringData = new float[lightSensor.sampleSize()];
-				
-		
-		//Start odometer and sensor threads
+		int buttonChoice;
+
+		do {
+			lcd.clear();   		// clear the display
+
+			// Ask the user whether Falling or Rising edge should be selected
+			lcd.drawString("<      >", 0, 0);
+			lcd.drawString("Falling ", 0, 1);
+			lcd.drawString(" Edge   ", 0, 2);
+			lcd.drawString("        ", 0, 3);
+			lcd.drawString("<      >", 0, 4);
+
+			buttonChoice = Button.waitForAnyPress();      // Record choice (left or right press)
+
+			// Until button pressed
+		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT); 
+
+		// Set odometer and start thread
+		try {
+			odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
+		} catch (OdometerExceptions e) {
+		}
 		Thread odoThread = new Thread(odometer);
 		odoThread.start();
-		Thread usPoller = new UltrasonicPoller(usDistance, usData, dataCont);
-		usPoller.start();
-	    Thread lightGPoller = new LightPoller(lightSample, lightData, dataCont);
-	    lightGPoller.start();
-	    Thread lightRPoller = new LightColorPoller(ringSample, ringData, dataCont);
-	    lightRPoller.start();
-		
-		
-	    //wait to initiate field trial
-		Button.waitForAnyPress();
-		
-		//Start ultrasonic localizer thread and wait for it to finish
-		uLocalizer.start();
+		Navigation nav = new Navigation(leftMotor, rightMotor, odometer);
+
+
+		// Based on edge selection, call the corresponding edge method on the Ultrasonic Localizer object
+		isUSLocalizing = true;
+		UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(LocalizationType.FALLING_EDGE, odometer, nav);
+		usLocalizer.fallingEdge();
+		isUSLocalizing = false;
+
+		// Upon any input, instantiate light localizer
+		isLightLocalizing = true;
+		LightLocalizer lightLocalizer  = new LightLocalizer(odometer, nav);    
+		lightLocalizer.start();
 		try {
-			uLocalizer.join();
+			lightLocalizer.join();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			
 		}
-		
-		//Start light localizer and wait for it to finish
-		lLocalizer.start();
-		try {
-			lLocalizer.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		//start search thread
-		tracker.start();
-		
-		
-		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
-		System.exit(0);	 
-		
-		
-	 }
+		isLightLocalizing = false;
+		odometer.setXYT(0, 0, 0);
+		isGoingToLL = true;
+		Navigation.travelTo(0, LLy);
+		Navigation.travelTo(LLx, LLy);
+
+
+
+	}
+
 }
